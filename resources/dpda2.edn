@@ -1,6 +1,7 @@
 start z_0
 final z_4
 
+;; this should accept start words of 0^2n 1^n, n >= 1 (?)
 (z_0, 0, #) -> (z_0, A#)
 (z_0, 0, A) -> (z_0, AA)
 (z_0, 1, A) -> (z_1, _)

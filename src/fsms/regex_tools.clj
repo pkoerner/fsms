@@ -19,4 +19,10 @@
 ;; a tuple of the form (z0, a, #)
 (def state+sym+gamma (regex-concat lpar state comma syms comma gamma-syms rpar))
 (def state+gamma (regex-concat lpar state comma gamma-syms rpar))
+(def state+gamma+direction (regex-concat lpar state comma gamma-syms comma direction rpar))
+
+(def pda-lhs state+sym+gamma)
+(def pda-rhs state+gamma)
+(def turing-lhs state+gamma)
+(def turing-rhs state+gamma+direction)
 

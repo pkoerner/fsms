@@ -1,18 +1,16 @@
 (ns fsms.dpda-parser
   (:use [fsms.commons]
-        [fsms.regex-tools])
+        [fsms.regex-tools]
+        [fsms.parse-commons])
   (:require [clojure.string :as s]
             [clojure.java.io :as io]))
 
-(defn parse-final-states [line]
-  (let [[final & fstates] (re-seq #"\S+" line)]
-    (if (seq fstates)
-      {:final-states (set fstates)}
-      (assert false (str "PARSE CRITICAL: No accepting states found in line: " line)))))
-
-(defn parse-transition [line]
+(defn parse-transition
+  "attempts parsing a transition from a string such as
+      (z0, a, #) -> (z1, A#)"
+  [line]
   (let [[_ state-from sym tos state-to new-stack :as match]
-          (re-find (regex-concat state+sym+gamma arrow state+gamma end-of-line)
+          (re-find (regex-concat pda-lhs arrow pda-rhs end-of-line)
                    line)]
     (assert match (str "PARSE CRITICAL: not a valid transition: " line))
     (assert (= 1 (count sym)) (str "PARSE CRITICAL: input symbol too long: " sym " in: " line))
@@ -20,16 +18,11 @@
     [{:state state-from, :symbol sym :top-of-stack tos}
      {:state state-to :new-stack (s/replace new-stack lambda "")}]))
 
-(defn parse-start [line]
-  (let [[_ start] (re-find #"^start\s+(\w+)\s*$" line)]
-    (assert start
-            (str "no valid start state found in line: " line))
-    {:start start}))
-
 
 (defn parse-line [line-str]
   (let [line (s/trim line-str)]
     (cond (s/blank? line) nil
+          (s/starts-with? line ";") nil
           (s/starts-with? line "final") (parse-final-states line)
           (s/starts-with? line "start") (parse-start line)
           (s/starts-with? line "(") (parse-transition line)
@@ -52,6 +45,7 @@
   (let [maps (filter map? infos)]
     (assert (not (<= (count maps) 1)) "PARSE CRITICAL: expected a declaration of start and final states")
     (assert (not (<= 3 (count maps))) "PARSE CRITICAL: too many declaration of start or final states")
+    (assert (= #{:final-states :start} (set (mapcat keys maps))) "PARSE CRITICAL: expected a declaration of start and final states")
     (let [maps (filter map? infos)
           base (apply merge maps)
           delta-trans (remove map? infos)
