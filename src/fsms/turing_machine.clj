@@ -9,7 +9,7 @@
   [{:state (get tm :start)
     :band-left blank
     :current (str (first word))
-    :band-right (apply str (rest word))}])
+    :band-right (let [s (apply str (rest word))] (if (empty? s) blank s))}])
 
 (defn turing-step
   "Executes a single step of a turing machine."
