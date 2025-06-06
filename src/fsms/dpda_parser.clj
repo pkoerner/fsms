@@ -14,6 +14,7 @@
                    line)]
     (assert match (str "PARSE CRITICAL: not a valid transition: " line))
     (assert (= 1 (count sym)) (str "PARSE CRITICAL: input symbol too long: " sym " in: " line))
+    (assert (= 1 (count tos)) (str "PARSE CRITICAL: top of stack too long: " tos " in: " line))
     (assert (not= tos lambda) (str "PARSE CRITICAL: lambda not allowed as top of stack in: " line))
     [{:state state-from, :symbol sym :top-of-stack tos}
      {:state state-to :new-stack (s/replace new-stack lambda "")}]))
