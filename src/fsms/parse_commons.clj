@@ -15,7 +15,7 @@
   "attempts to parse a single start state in a line like
       start z0"
   [line]
-  (let [[_ start] (re-find (regex-concat #"^start" state #"$") line)]
+  (let [[_ start] (re-find (regex-concat #"^start\s+" state #"$") line)]
     (assert start
             (str "no valid start state found in line: " line))
     {:start start}))

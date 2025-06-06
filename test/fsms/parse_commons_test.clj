@@ -19,3 +19,21 @@
          "final z0 z1" {:final-states #{"z0" "z1"}}
          "final z_0 z_1" {:final-states #{"z_0" "z_1"}}
          "final z_0z2 z_1" {:final-states #{"z_0z2" "z_1"}})))
+
+(deftest start-invalid-test
+  (testing "invalid start state declaration is recognized"
+    (is (thrown-with-msg? AssertionError #"no valid start state"
+                          (parse-start "start")))
+    (is (thrown-with-msg? AssertionError #"no valid start state"
+                          (parse-start "start zö")))
+    (is (thrown-with-msg? AssertionError #"no valid start state"
+                          (parse-start "startz")))
+    (is (thrown-with-msg? AssertionError #"no valid start state"
+                          (parse-start "start z1 z2")))))
+
+(deftest start-valid-test
+  (testing "valid start state declaration returns proper values"
+    (are [x y] (= (parse-start x) y)
+         "start z0" {:start "z0"}
+         "start z_0" {:start "z_0"}
+         "start   z_0    " {:start "z_0"})))
