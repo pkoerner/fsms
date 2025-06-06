@@ -12,7 +12,7 @@
     (is (thrown-with-msg? AssertionError #"No accepting states"
                           (parse-final-states "finalz    ")))))
 
-(deftest final-vaid-test
+(deftest final-valid-test
   (testing "valid accepting state declaration returns proper values"
     (are [x y] (= (parse-final-states x) y)
          "final z0" {:final-states #{"z0"}}
