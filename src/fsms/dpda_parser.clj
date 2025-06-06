@@ -1,5 +1,6 @@
 (ns fsms.dpda-parser
-  (:use [fsms.commons])
+  (:use [fsms.commons]
+        [fsms.regex-tools])
   (:require [clojure.string :as s]
             [clojure.java.io :as io]))
 
@@ -11,7 +12,7 @@
 
 (defn parse-transition [line]
   (let [[_ state-from sym tos state-to new-stack :as match]
-          (re-find #"\(\s*(\w+)\s*,\s*(\w+)\s*,\s*(\S+)\s*\)\s*->\s*\(\s*(\w+)\s*,\s*(\S+)\s*\)\s*$" 
+          (re-find (regex-concat state+sym+gamma arrow state+gamma end-of-line)
                    line)]
     (assert match (str "PARSE CRITICAL: not a valid transition: " line))
     (assert (= 1 (count sym)) (str "PARSE CRITICAL: input symbol too long: " sym " in: " line))
