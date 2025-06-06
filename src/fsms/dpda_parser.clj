@@ -37,7 +37,7 @@
 (defn validate-deterministic [delta-trans delta]
   (assert (= (count delta-trans) (count delta)) "CRITICAL: transition function is not deterministic")
   (doseq [[{:keys [state symbol top-of-stack]} _rhs] delta-trans
-        :when (not= symbol lambda)]
+          :when (not= symbol lambda)]
     (assert (not (contains? delta {:state state, :symbol lambda, :top-of-stack top-of-stack}))
             (str "CRITICAL: transition function is not deterministic, as " [state symbol top-of-stack] " as well as " [state lambda top-of-stack] " is defined"))))
 
