@@ -3,9 +3,6 @@
         [fsms.dpda-parser]))
 
 
-(defmacro assert-msg [msg form]
-  `(~'thrown-with-msg? AssertionError ~msg ~form))
-
 (deftest invalid-lines
   (testing "invalid lines are recognised"
     (is (thrown-with-msg? AssertionError #"PARSE CRITICAL: unexpected input" (parse-line "stupid stuff")))
