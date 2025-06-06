@@ -1,11 +1,12 @@
 (ns fsms.core
   (:require [fsms.dpda-parser :as dpda-parser]
             [fsms.dpda :as dpda]
+            [fsms.turing-machine :as tm]
+            [fsms.turing-parser :as tm-parser]
             [fsms.config :as config]
             [fsms.search :refer [build-accept?-fn *debug*]]
             [fsms.cli :as cli]
-            [clojure.java.io :as io]
-            )
+            [clojure.java.io :as io])
   (:gen-class))
 
 
@@ -30,6 +31,16 @@
                         dpda
                         config)))
 
+(defn validate-tm [file config]
+  (let [tm (tm-parser/file->tm file)
+        config (config/load-config config)]
+    (validate-automaton (build-accept?-fn tm/initial-configurations
+                                          tm/turing-step
+                                          tm/turing-accepting?
+                                          tm/turing-discard?)
+                        tm
+                        config)))
+
 
 (defn execute-with-output [f args opts]
   (binding [*out* (if (:output opts)
@@ -50,6 +61,7 @@
       (cli/exit (if ok? 0 1) exit-message)
       (case action
         "check-dpda" (execute-with-output validate-dpda args options)
+        "check-tm"   (execute-with-output validate-tm args options)
         ))))
 
 

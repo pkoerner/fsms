@@ -38,6 +38,10 @@ Valid options for COMMAND are:
            (= 3 (count arguments)))
          {:action (first arguments) :args (rest arguments)
           :options options}
+      (and (= "check-tm" (first arguments))
+           (= 3 (count arguments)))
+         {:action (first arguments) :args (rest arguments)
+          :options options}
       :else ; failed custom validation => exit with usage summary
         {:exit-message (usage summary)})))
 

@@ -12,7 +12,7 @@
       (cond (empty? q) false
             (> nr-states MAX-STATES) (do (when *debug* (println "; INFO: reached maximum number of states, assuming non-accepting")) false)
             (accept?-fn automaton (first q)) true
-            (discard?-fn (first q)) (do (println "; INFO: reached a limit, discarding configuration" (first q))
+            (discard?-fn (first q)) (do (when *debug* (println "; INFO: reached a limit, discarding configuration" (first q)))
                                         (recur nr-states (subvec q 1) seen))
             :else
             (let [config (first q)

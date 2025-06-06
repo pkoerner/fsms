@@ -1,0 +1,3 @@
+{:accept ["abc" "aabbcc" "aaabbbccc" "aaaabbbbcccc"]
+ :reject ["_" "ab" "ababc" "abcab" "cba" "abbc"]
+ }
