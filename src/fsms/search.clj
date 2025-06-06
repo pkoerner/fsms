@@ -2,15 +2,17 @@
 
 (def MAX-STATES 1000)
 
+(def ^:dynamic *debug* false)
+
 (defn build-accept?-fn [init-fn successors-fn accept?-fn discard?-fn]
   (fn [automaton word]
     (loop [nr-states 0
            q (vec (init-fn automaton word))
            seen (set q)]
       (cond (empty? q) false
-            (> nr-states MAX-STATES) (do (println "INFO: reached maximum number of states, assuming non-accepting") false)
+            (> nr-states MAX-STATES) (do (when *debug* (println "; INFO: reached maximum number of states, assuming non-accepting")) false)
             (accept?-fn automaton (first q)) true
-            (discard?-fn (first q)) (do (println "INFO: reached a limit, discarding configuration" (first q)) false)
+            (discard?-fn (first q)) (do (when *debug* (println "; INFO: reached a limit, discarding configuration" (first q))) false)
             :else
             (let [config (first q)
                   succs (successors-fn automaton config)

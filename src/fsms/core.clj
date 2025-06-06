@@ -1,9 +1,56 @@
 (ns fsms.core
   (:require [fsms.dpda-parser :as dpda-parser]
             [fsms.dpda :as dpda]
-            [fsms.search :refer [build-accept?-fn]]
-            [clojure.java.io :as io])
+            [fsms.config :as config]
+            [fsms.search :refer [build-accept?-fn *debug*]]
+            [fsms.cli :as cli]
+            [clojure.java.io :as io]
+            )
   (:gen-class))
+
+
+
+
+(defn validate-automaton [accept?-fn automaton config]
+  (let [err1 (for [word (:accept config)
+                   :when (not (accept?-fn automaton word))]
+               (str "Word '" word "' should have been accepted, but was rejected"))
+        err2 (for [word (:reject config)
+                   :when (accept?-fn automaton word)]
+               (str "Word '" word "' should have been rejected, but was accepted"))]
+    (concat err1 err2)))
+
+(defn validate-dpda [file config]
+  (let [dpda (dpda-parser/file->dpda file)
+        config (config/load-config config)]
+    (validate-automaton (build-accept?-fn dpda/initial-configurations
+                                          dpda/next-states
+                                          dpda/accepting-configuration?
+                                          dpda/discard-config?)
+                        dpda
+                        config)))
+
+
+(defn execute-with-output [f args opts]
+  (binding [*out* (if (:output opts)
+                    (io/writer (:output opts))
+                    *out*)
+            *debug* (if (:debug opts) true *debug*)]
+    (let [res (apply f args)]
+      (doseq [l res]
+        (println (str "; " l)))
+      (if (seq res)
+        (println 0)
+        (println (:score opts))))))
+
+
+(defn -main [& args]
+  (let [{:keys [action args options exit-message ok?]} (cli/validate-args args)]
+    (if exit-message
+      (cli/exit (if ok? 0 1) exit-message)
+      (case action
+        "check-dpda" (execute-with-output validate-dpda args options)
+        ))))
 
 
 (comment
@@ -12,10 +59,9 @@
   (dpda/next-states dpda (first (dpda/next-states dpda  (first (dpda/initial-configurations dpda "abc")))))
 
   ((build-accept?-fn dpda/initial-configurations
-                    dpda/next-states
-                    dpda/accepting-configuration?
-                    dpda/discard-config?
-                    )
+                     dpda/next-states
+                     dpda/accepting-configuration?
+                     dpda/discard-config?)
    dpda
    "abc"
    )
