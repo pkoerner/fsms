@@ -14,6 +14,7 @@
     (-> config
         (assoc :state (:state next-state))
         (update :input (if (= sym lambda) identity (comp (partial apply str) rest)))
+        ;; NOTE: An empty / lambda stack is represented as empty string (as returned by the parser). 
         (update :stack (fn [stack] (apply str (concat (:new-stack next-state) (rest stack))))))))
 
 (defn next-states [dpda config]

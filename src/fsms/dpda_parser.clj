@@ -7,7 +7,9 @@
 
 (defn parse-transition
   "attempts parsing a transition from a string such as
-      (z0, a, #) -> (z1, A#)"
+      (z0, a, #) -> (z1, A#)
+   Lambda in the new stack is replaced by a blank string,
+   allowing easy stack modification."
   [line]
   (let [[_ state-from sym tos state-to new-stack :as match]
           (re-find (regex-concat pda-lhs arrow pda-rhs end-of-line)
