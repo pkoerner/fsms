@@ -41,3 +41,15 @@
   (< MAX-BAND-LENGTH (+ (count (get config :band-left))
                         1
                         (count (get config :band-right)))))
+
+(defn assert-deterministic [tm]
+  (let [delta (:delta tm)]
+    (assert (<= (reduce max 0 (map count (vals delta))) 1))))
+
+(defn result-from-configuration [config]
+  (->> (concat (:band-left config) [(:current config)] (:band-right config))
+       (drop-while #{(first blank)})
+       reverse
+       (drop-while #{(first blank)})
+       reverse
+       (apply str)))

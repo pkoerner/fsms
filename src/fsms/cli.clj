@@ -8,7 +8,16 @@
 Valid options for COMMAND are:
   check-dpda <dpda-file> <config-file>
    | Check an implementation of a DPDA against
-   | a number of accepted and rejected words. "
+   | a number of accepted and rejected words.
+  check-tm <tm-file> <config-file>
+   | Check an implementation of a TM against
+   | a number of accepted and rejected words.  
+  check-dtm <tm-file> <config-file>
+   | Like check-tm, but also ensure TM is deterministic.
+  check-calc-dtm <tm-file> <config-file>
+   | Check an implementation of a deterministic TM used for calculation.
+   | Verify that input-output pairs are satisfied.
+  "
   )
 
 (defn usage [summary]
@@ -34,14 +43,11 @@ Valid options for COMMAND are:
       errors ; errors => exit with description of errors
         {:exit-message (clojure.string/join errors)}
       ;; custom validation on arguments
-      (and (= "check-dpda" (first arguments))
+      (and (contains? #{"check-dpda" "check-tm" "check-dtm" "check-calc-dtm"} (first arguments))
            (= 3 (count arguments)))
          {:action (first arguments) :args (rest arguments)
           :options options}
-      (and (= "check-tm" (first arguments))
-           (= 3 (count arguments)))
-         {:action (first arguments) :args (rest arguments)
-          :options options}
+
       :else ; failed custom validation => exit with usage summary
         {:exit-message (usage summary)})))
 
