@@ -18,7 +18,7 @@
     (assert (= 1 (count sym)) (str "PARSE CRITICAL: input symbol too long: " sym " in: " line))
     (assert (not= tos lambda) (str "PARSE CRITICAL: lambda not allowed as top of stack in: " line))
     [{:state state-from, :symbol sym :top-of-stack tos}
-     {:state state-to :new-stack (s/replace new-stack "_" "")}]))
+     {:state state-to :new-stack (s/replace new-stack lambda "")}]))
 
 (defn parse-start [line]
   (let [[_ start] (re-find #"^start\s+(\w+)\s*$" line)]
