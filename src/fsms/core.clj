@@ -32,7 +32,7 @@
         config (config/load-config config)]
     (validate-automaton (build-accept?-fn dpda/initial-configurations
                                           dpda/next-states
-                                          dpda/accepting-configuration?
+                                          dpda/dpda-accepting-configuration?
                                           dpda/discard-config?)
                         dpda
                         config)))
@@ -96,17 +96,3 @@
         ))))
 
 
-(comment
-  (def dpda (dpda-parser/file->dpda (io/resource "dpda2.edn")))
-  (dpda/initial-configurations dpda "abc")
-  (dpda/next-states dpda (first (dpda/next-states dpda  (first (dpda/initial-configurations dpda "abc")))))
-
-  ((build-accept?-fn dpda/initial-configurations
-                     dpda/next-states
-                     dpda/accepting-configuration?
-                     dpda/discard-config?)
-   dpda
-   "abc"
-   )
-  
-  )

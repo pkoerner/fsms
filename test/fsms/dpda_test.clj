@@ -53,6 +53,18 @@
          #_=> [{:state "z1", :input "000", :stack ""}]
 
          ;; two transitions applicable -- can't be, only after refactoring
-         )
-    )
-  )
+         )))
+
+(deftest dpda-accepting-test
+  (testing "configurations are accepted"
+    (is (dpda-accepting-configuration? {:final-states #{"z0"}} {:state "z0", :input "", :stack ""}))
+    (is (dpda-accepting-configuration? {:final-states #{"z0"}} {:state "z0", :input "", :stack "#"}))
+    (is (dpda-accepting-configuration? {:final-states #{"z0"}} {:state "z0", :input "", :stack "ABC"}))
+    (is (dpda-accepting-configuration? {:final-states #{"z1"}} {:state "z1", :input "", :stack "ABC"}))))
+
+(deftest not-accepting-test
+  (testing "configurations are not accepted"
+    (is (not (dpda-accepting-configuration? {:final-states #{"z0"}} {:state "z1", :input "", :stack ""})))
+    (is (not (dpda-accepting-configuration? {:final-states #{"z0"}} {:state "z1", :input "", :stack "#"})))
+    (is (not (dpda-accepting-configuration? {:final-states #{"z0"}} {:state "z0", :input "a", :stack ""})))
+    (is (not (dpda-accepting-configuration? {:final-states #{"z0"}} {:state "z0", :input "a", :stack "#"})))))

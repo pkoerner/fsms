@@ -31,7 +31,7 @@
             lambda-trans [(trans config lambda lambda-trans)]
             :else nil))))
 
-(defn accepting-configuration? [dpda config]
+(defn dpda-accepting-configuration? [dpda config]
   (and (empty? (:input config))
        (contains? (get dpda :final-states) (get config :state))))
 
