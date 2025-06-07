@@ -35,7 +35,7 @@
   (keep parse-line (line-seq (io/reader file))))
 
 (defn build-delta [trans]
-  (into {} trans))
+  (into {} (map (fn [[k vs]] [k (map second vs)]) (group-by first trans))))
 
 (defn validate-deterministic [delta-trans delta]
   (assert (= (count delta-trans) (count delta)) "CRITICAL: transition function is not deterministic")

@@ -46,5 +46,4 @@
          "(z, a, #) -> (z1, A)"
          [{:state "z", :symbol "a", :top-of-stack "#"} {:state "z1" :new-stack "A"}]
          "(z1, _, A) -> (z, AA)"
-         [{:state "z1", :symbol "_", :top-of-stack "A"} {:state "z" :new-stack "AA"}]
-         )))
+         [{:state "z1", :symbol "_", :top-of-stack "A"} {:state "z" :new-stack "AA"}])))

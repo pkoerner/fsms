@@ -1,10 +1,10 @@
-(ns fsms.dpda
+(ns fsms.pda
   (:use [fsms.commons]))
 
 (def MAX-STACKSIZE 30)
 
-(defn initial-configurations [dpda word]
-  [{:state (get dpda :start)
+(defn initial-configurations [pda word]
+  [{:state (get pda :start)
     :input word
     :stack "#"}])
 
@@ -17,19 +17,18 @@
         ;; NOTE: An empty / lambda stack is represented as empty string (as returned by the parser). 
         (update :stack (fn [stack] (apply str (concat (:new-stack next-state) (rest stack))))))))
 
-(defn next-states [dpda config]
+(defn next-states [pda config]
   (if (empty? (:stack config))
     nil
     (let [sym (str (first (get config :input)))
-          consume-sym (get-in dpda [:delta {:state (get config :state)
-                                            :symbol sym
-                                            :top-of-stack (str (first (get config :stack)))}])
-          lambda-trans (get-in dpda [:delta {:state (get config :state)
-                                             :symbol lambda
-                                             :top-of-stack (str (first (get config :stack)))}])]
-      (cond consume-sym [(trans config sym consume-sym)]
-            lambda-trans [(trans config lambda lambda-trans)]
-            :else nil))))
+          consume-sym (get-in pda [:delta {:state (get config :state)
+                                                   :symbol sym
+                                                   :top-of-stack (str (first (get config :stack)))}])
+          lambda-trans (get-in pda [:delta {:state (get config :state)
+                                                    :symbol lambda
+                                                    :top-of-stack (str (first (get config :stack)))}])]
+      (concat (map (partial trans config sym) consume-sym)
+              (map (partial trans config lambda) lambda-trans)))))
 
 (defn dpda-accepting-configuration? [dpda config]
   (and (empty? (:input config))

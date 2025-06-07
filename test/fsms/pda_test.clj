@@ -1,5 +1,5 @@
-(ns fsms.dpda-test
-  (:use [fsms.dpda]
+(ns fsms.pda-test
+  (:use [fsms.pda]
         [clojure.test]))
 
 (deftest initial-configurations-test
@@ -16,39 +16,39 @@
 
 (deftest next-states-test
   (testing "the successor configurations are calculated correctly"
-    (are [dpda config succs] (= (set succs) (set (next-states dpda config)))
+    (are [pda config succs] (= (set succs) (set (next-states pda config)))
          ;; wrong state
-         {:delta {{:state "z1", :symbol "0", :top-of-stack "#"} {:state "z1", :new-stack "A#"}}}
+         {:delta {{:state "z1", :symbol "0", :top-of-stack "#"} [{:state "z1", :new-stack "A#"}]}}
          {:state "z0", :input "000", :stack "#"}
          #_=> []
 
          ;; wrong symbol
-         {:delta {{:state "z0", :symbol "1", :top-of-stack "#"} {:state "z1", :new-stack "A#"}}}
+         {:delta {{:state "z0", :symbol "1", :top-of-stack "#"} [{:state "z1", :new-stack "A#"}]}}
          {:state "z0", :input "000", :stack "#"}
          #_=> []
 
          ;; correct state, pushing a symbol
-         {:delta {{:state "z0", :symbol "0", :top-of-stack "#"} {:state "z1", :new-stack "A#"}}}
+         {:delta {{:state "z0", :symbol "0", :top-of-stack "#"} [{:state "z1", :new-stack "A#"}]}}
          {:state "z0", :input "000", :stack "#"}
          #_=> [{:state "z1", :input "00", :stack "A#"}]
 
          ;; correct state, replacing a symbol
-         {:delta {{:state "z0", :symbol "0", :top-of-stack "A"} {:state "z1", :new-stack ""}}}
+         {:delta {{:state "z0", :symbol "0", :top-of-stack "A"} [{:state "z1", :new-stack ""}]}}
          {:state "z0", :input "000", :stack "A#"}
          #_=> [{:state "z1", :input "00", :stack "#"}]
 
          ;; correct state, replacing last symbol
-         {:delta {{:state "z0", :symbol "0", :top-of-stack "#"} {:state "z1", :new-stack ""}}}
+         {:delta {{:state "z0", :symbol "0", :top-of-stack "#"} [{:state "z1", :new-stack ""}]}}
          {:state "z0", :input "000", :stack "#"}
          #_=> [{:state "z1", :input "00", :stack ""}]
 
          ;; lambda transition
-         {:delta {{:state "z0", :symbol "_", :top-of-stack "A"} {:state "z1", :new-stack "A"}}}
+         {:delta {{:state "z0", :symbol "_", :top-of-stack "A"} [{:state "z1", :new-stack "A"}]}}
          {:state "z0", :input "000", :stack "A#"}
          #_=> [{:state "z1", :input "000", :stack "A#"}]
 
          ;; lambda transition
-         {:delta {{:state "z0", :symbol "_", :top-of-stack "#"} {:state "z1", :new-stack ""}}}
+         {:delta {{:state "z0", :symbol "_", :top-of-stack "#"} [{:state "z1", :new-stack ""}]}}
          {:state "z0", :input "000", :stack "#"}
          #_=> [{:state "z1", :input "000", :stack ""}]
 

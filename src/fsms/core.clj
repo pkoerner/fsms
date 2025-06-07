@@ -1,6 +1,6 @@
 (ns fsms.core
   (:require [fsms.dpda-parser :as dpda-parser]
-            [fsms.dpda :as dpda]
+            [fsms.pda :as pda]
             [fsms.turing-machine :as tm]
             [fsms.turing-parser :as tm-parser]
             [fsms.config :as config]
@@ -30,10 +30,10 @@
 (defn validate-dpda [file config]
   (let [dpda (dpda-parser/file->dpda file)
         config (config/load-config config)]
-    (validate-automaton (build-accept?-fn dpda/initial-configurations
-                                          dpda/next-states
-                                          dpda/dpda-accepting-configuration?
-                                          dpda/discard-config?)
+    (validate-automaton (build-accept?-fn pda/initial-configurations
+                                          pda/next-states
+                                          pda/dpda-accepting-configuration?
+                                          pda/discard-config?)
                         dpda
                         config)))
 
