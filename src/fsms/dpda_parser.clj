@@ -5,22 +5,6 @@
   (:require [clojure.string :as s]
             [clojure.java.io :as io]))
 
-(defn parse-transition
-  "attempts parsing a transition from a string such as
-      (z0, a, #) -> (z1, A#)
-   Lambda in the new stack is replaced by a blank string,
-   allowing easy stack modification."
-  [line]
-  (let [[_ state-from sym tos state-to new-stack :as match]
-          (re-find (regex-concat pda-lhs arrow pda-rhs end-of-line)
-                   line)]
-    (assert match (str "PARSE CRITICAL: not a valid transition: " line))
-    (assert (= 1 (count sym)) (str "PARSE CRITICAL: input symbol too long: " sym " in: " line))
-    (assert (= 1 (count tos)) (str "PARSE CRITICAL: top of stack too long: " tos " in: " line))
-    (assert (not= tos lambda) (str "PARSE CRITICAL: lambda not allowed as top of stack in: " line))
-    [{:state state-from, :symbol sym :top-of-stack tos}
-     {:state state-to :new-stack (s/replace new-stack lambda "")}]))
-
 
 (defn parse-line [line-str]
   (let [line (s/trim line-str)]
@@ -28,7 +12,7 @@
           (s/starts-with? line ";") nil
           (s/starts-with? line "final") (parse-final-states line)
           (s/starts-with? line "start") (parse-start line)
-          (s/starts-with? line "(") (parse-transition line)
+          (s/starts-with? line "(") (parse-pda-transition line)
           :else (assert false (str "PARSE CRITICAL: unexpected input: " line-str)))))
 
 (defn parse-dpda-file [file]
