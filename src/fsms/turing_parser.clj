@@ -5,7 +5,7 @@
   (:require [clojure.string :as s]))
 
 (defn parse-lba-symbols [line]
-  (let [matches (re-seq (regex-concat #"\s*" lpar word-chars comma word-chars rpar #"\s*") (apply str (drop (count "symbols") line)))
+  (let [matches (re-seq (regex-concat #"\s*" lpar word-chars comma gamma-syms rpar #"\s*") (apply str (drop (count "symbols") line)))
         tuples (map (comp vec rest) matches)]
     (assert (= line (apply str "symbols" (map first matches))) (str "PARSE CRITICAL: extra input in line '" line
                                                                     "', valid information was " (s/join ", " (map (fn [[x y]] (str "(" x "," y ")")) tuples))))
@@ -13,7 +13,8 @@
     (assert (every? #(= 1 (count (second %))) tuples) "PARSE CRITICAL: symbol declared as too long")
     {:symbols (into {"_" "_"} tuples)}))
 
-(parse-lba-symbols "symbols (1, a) (2, b) ")
+(comment (parse-lba-symbols "symbols (1, a) (2, b) "))
+(comment (parse-lba-symbols "symbols (1, ä) (2, â) "))
 
 (defn parse-transition 
   "attempts parsing a transition form a line such as
