@@ -55,9 +55,9 @@
                     "N" band-left
                     "R" (str band-left symbol))
        :current (case direction
-                  "L" (str (last band-left))
+                  "L" (and (last band-left) (str (last band-left)))
                   "N" (get trans :symbol) 
-                  "R" (str (first band-right)))
+                  "R" (and (first band-right) (str (first band-right))))
        :band-right (case direction
                      "L" (apply str symbol band-right)
                      "N" band-right
