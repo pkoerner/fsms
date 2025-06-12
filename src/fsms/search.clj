@@ -9,6 +9,7 @@
     (loop [nr-states 0
            q (vec (init-fn automaton word))
            seen (set q)]
+      ; (println (first q))
       (cond (empty? q) false
             (> nr-states MAX-STATES) (do (when *debug* (println "; INFO: reached maximum number of states, assuming non-accepting")) false)
             (accept?-fn automaton (first q)) (first q) ;; is truthy

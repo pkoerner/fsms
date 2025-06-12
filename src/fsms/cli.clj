@@ -14,6 +14,8 @@ Valid options for COMMAND are:
    | a number of accepted and rejected words.  
   check-dtm <tm-file> <config-file>
    | Like check-tm, but also ensure TM is deterministic.
+  check-lba <tm-file> <config-file>
+   | Like check-lba, but assumes TM is an LBA.
   check-calc-dtm <tm-file> <config-file>
    | Check an implementation of a deterministic TM used for calculation.
    | Verify that input-output pairs are satisfied.
@@ -43,7 +45,7 @@ Valid options for COMMAND are:
       errors ; errors => exit with description of errors
         {:exit-message (clojure.string/join errors)}
       ;; custom validation on arguments
-      (and (contains? #{"check-dpda" "check-tm" "check-dtm" "check-calc-dtm"} (first arguments))
+      (and (contains? #{"check-dpda" "check-tm" "check-dtm" "check-lba" "check-calc-dtm"} (first arguments))
            (= 3 (count arguments)))
          {:action (first arguments) :args (rest arguments)
           :options options}

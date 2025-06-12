@@ -4,6 +4,17 @@
         [clojure.java.io :as io])
   (:require [clojure.string :as s]))
 
+(defn parse-lba-symbols [line]
+  (let [matches (re-seq (regex-concat #"\s*" lpar word-chars comma word-chars rpar #"\s*") (apply str (drop (count "symbols") line)))
+        tuples (map (comp vec rest) matches)]
+    (assert (= line (apply str "symbols" (map first matches))) (str "PARSE CRITICAL: extra input in line '" line
+                                                                    "', valid information was " (s/join ", " (map (fn [[x y]] (str "(" x "," y ")")) tuples))))
+    (assert (every? #(= 1 (count (first %))) tuples) "PARSE CRITICAL: symbol declared as too long")
+    (assert (every? #(= 1 (count (second %))) tuples) "PARSE CRITICAL: symbol declared as too long")
+    {:symbols (into {"_" "_"} tuples)}))
+
+(parse-lba-symbols "symbols (1, a) (2, b) ")
+
 (defn parse-transition 
   "attempts parsing a transition form a line such as
       (z0, a) -> (z1, A, R)"
@@ -25,6 +36,7 @@
           (s/starts-with? line "final") (parse-final-states line)
           (s/starts-with? line "start") (parse-start line)
           (s/starts-with? line "(") (parse-transition line)
+          (s/starts-with? line "symbols") (parse-lba-symbols line)
           :else (assert false (str "PARSE CRITICAL: unexpected input: " line-str)))))
 
 (defn parse-tm-file [file]
@@ -46,3 +58,18 @@
 
 
 (def file->tm (comp build-tm parse-tm-file))
+
+(defn build-lba [infos]
+  (let [maps (filter map? infos)]
+    (assert (not (<= (count maps) 2)) "PARSE CRITICAL: expected a declaration of symbols, start and final states")
+    (assert (not (<= 4 (count maps))) "PARSE CRITICAL: too many declaration of symbols, start or final states")
+    (assert (= #{:symbols :final-states :start} (set (mapcat keys maps))) "PARSE CRITICAL: expected a declaration of symbols, start and final states")
+    (let [maps (filter map? infos)
+          base (apply merge maps)
+          delta-trans (remove map? infos)
+          delta (build-delta delta-trans)]
+      (assoc base :delta delta))))
+
+(def file->lba (comp build-lba parse-tm-file))
+
+; ((:symbols (file->lba (io/resource "lba1.lba"))) "b")

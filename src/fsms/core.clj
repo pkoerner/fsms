@@ -47,6 +47,17 @@
                         tm
                         config)))
 
+(defn validate-lba [file config]
+  (let [tm (tm-parser/file->lba file)
+        config (config/load-config config)]
+    ;; TODO: handle exception on invalid configuration
+    (validate-automaton (build-accept?-fn tm/initial-lba-configurations
+                                          tm/lba-step
+                                          tm/turing-accepting?
+                                          tm/turing-discard?)
+                        tm
+                        config)))
+
 (defn validate-dtm [file config]
   (let [tm (tm-parser/file->tm file)
         config (config/load-config config)]
@@ -92,6 +103,7 @@
         "check-dpda" (execute-with-output validate-dpda args options)
         "check-tm"   (execute-with-output validate-tm args options)
         "check-dtm"  (execute-with-output validate-dtm args options)
+        "check-lba"  (execute-with-output validate-lba args options)
         "check-calc-dtm" (execute-with-output validate-calc-dtm args options)
         ))))
 
