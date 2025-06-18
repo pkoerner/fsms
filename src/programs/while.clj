@@ -7,6 +7,10 @@
     :AssignConstant (when (ids (second prog)) {:error true, :msg (str "Error: Assigning loop variable " (second prog))})
     :AssignCalc     (cond (ids (second prog)) {:error true, :msg (str "Error: Assigning loop variable " (second prog))}
                           (ids (nth prog 2)) {:error true, :msg (str "Error: Reading loop variable " (second prog))})
+    :While (if (ids (second prog))
+            {:error true, :msg (str "Error: Reading loop variable " (second prog))}
+            (let [ress (keep #(analyse-instr % ids) (drop 2 prog))]
+              (first ress)))  
     :Loop (if (ids (second prog))
             {:error true, :msg (str "Error: Reading loop variable " (second prog))}
             (let [ress (keep #(analyse-instr % (conj ids (second prog))) (drop 2 prog))]
