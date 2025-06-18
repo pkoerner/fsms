@@ -19,7 +19,12 @@ Valid options for COMMAND are:
   check-calc-dtm <tm-file> <config-file>
    | Check an implementation of a deterministic TM used for calculation.
    | Verify that input-output pairs are satisfied.
-  "
+  check-loop-program <loop-file> <config-file>
+   | Like check-calc-dtm, but input is a LOOP-program.
+  check-while-program <while-file> <config-file>
+   | Like check-calc-dtm, but input is a WHILE-program.
+  check-goto-program <goto-file> <config-file>
+   | Like check-calc-dtm, but input is a GOTO-program."
   )
 
 (defn usage [summary]
@@ -45,7 +50,10 @@ Valid options for COMMAND are:
       errors ; errors => exit with description of errors
         {:exit-message (clojure.string/join errors)}
       ;; custom validation on arguments
-      (and (contains? #{"check-dpda" "check-tm" "check-dtm" "check-lba" "check-calc-dtm"} (first arguments))
+      (and (contains? #{"check-dpda" "check-tm" "check-dtm" "check-lba"
+                        "check-calc-dtm"
+                        "check-loop-program" "check-while-program" "check-goto-program"}
+                      (first arguments))
            (= 3 (count arguments)))
          {:action (first arguments) :args (rest arguments)
           :options options}

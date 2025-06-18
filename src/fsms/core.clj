@@ -6,6 +6,10 @@
             [fsms.config :as config]
             [fsms.search :refer [build-accept?-fn *debug*]]
             [fsms.cli :as cli]
+            [programs.parser :as prog-parser]
+            [programs.while :as while-progs]
+            [programs.goto :as goto-progs]
+            [instaparse.failure]
             [clojure.java.io :as io])
   (:gen-class))
 
@@ -81,6 +85,46 @@
                            config
                            tm/result-from-configuration)))
 
+(defn build-initial-environment [input]
+  (cond (integer? input) {"x1" input} 
+        (vector? input) (into {} (map-indexed (fn [idx e] [(str "x" (inc idx)) e]) input))
+        :else (throw (IllegalArgumentException. "unknown input type; expected integer or vector of integers, got: " input))))
+
+(defn validate-program [program interp-fn config]
+  (for [[input output] config
+        :let [res (interp-fn program (build-initial-environment input))]
+        :when (not (and (map? res) (= output (get res "x0" 0))))]
+    (if (map? res)
+      (str "Input " input " should yield '" output "' but was '" (get res "x0" 0) "' instead. Full environment: " (dissoc res :programs.goto/pc))  
+      (str "Error during execution with input: " input " - " res)))) 
+
+(defn validate-loop-program [file config]
+  (let [program (prog-parser/parse-with file prog-parser/parse-loop-program)]
+    (if (instance? instaparse.gll.Failure program)
+      [(clojure.string/replace (with-out-str (instaparse.failure/pprint-failure program)) "\n" "\n; ")]
+      (let [config (config/load-config config)
+            analysis-res (while-progs/analyse program)]
+        (if analysis-res
+          analysis-res
+          (validate-program program while-progs/interp config))))))
+
+(defn validate-while-program [file config]
+  (let [program (prog-parser/parse-with file prog-parser/parse-while-program)]
+    (if (instance? instaparse.gll.Failure program)
+      [(clojure.string/replace (with-out-str (instaparse.failure/pprint-failure program)) "\n" "\n; ")]
+      (let
+        [config (config/load-config config)
+         analysis-res (while-progs/analyse program)]
+        (if analysis-res
+          analysis-res
+          (validate-program program while-progs/interp config))))))
+
+(defn validate-goto-program [file config]
+  (let [program (prog-parser/parse-with file prog-parser/parse-goto-program)
+        config (config/load-config config)]
+    (if (instance? instaparse.gll.Failure program)
+      [(clojure.string/replace (with-out-str (instaparse.failure/pprint-failure program)) "\n" "\n; ")]
+      (validate-program program goto-progs/interp config))))
 
 (defn execute-with-output [f args opts]
   (binding [*out* (if (:output opts)
@@ -105,6 +149,9 @@
         "check-dtm"  (execute-with-output validate-dtm args options)
         "check-lba"  (execute-with-output validate-lba args options)
         "check-calc-dtm" (execute-with-output validate-calc-dtm args options)
+        "check-loop-program" (execute-with-output validate-loop-program args options)
+        "check-while-program" (execute-with-output validate-while-program args options)
+        "check-goto-program" (execute-with-output validate-goto-program args options)
         ))))
 
 

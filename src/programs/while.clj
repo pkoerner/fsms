@@ -1,4 +1,4 @@
-(ns programs.loop)
+(ns programs.while)
 
 (def MAX-STEPS 10000)
 
@@ -6,7 +6,7 @@
   (case (first prog)
     :AssignConstant (when (ids (second prog)) {:error true, :msg (str "Error: Assigning loop variable " (second prog))})
     :AssignCalc     (cond (ids (second prog)) {:error true, :msg (str "Error: Assigning loop variable " (second prog))}
-                          (ids (nth prog 2)) {:error true, :msg (str "Error: Reading loop variable " (second prog))})
+                          (ids (nth prog 2)) {:error true, :msg (str "Error: Reading loop variable " (nth prog 2))})
     :While (if (ids (second prog))
             {:error true, :msg (str "Error: Reading loop variable " (second prog))}
             (let [ress (keep #(analyse-instr % ids) (drop 2 prog))]
@@ -35,10 +35,15 @@
                         res (max ((case op "+" + "-" -) arg1 arg2) 0)]
                     {:program (rest instrs)
                      :env (assoc env id-lhs res)})
-      :Loop (let [[_loop id-loop body] (first instrs)]
-              {:program (apply concat [(repeat (get env id-loop 0) body) (rest instrs)])
+      :While (let [[_while id-while & body :as instr] (first instrs)]
+               (if (= 0 (get env id-while 0))
+                 {:program (rest instrs)
+                  :env env}
+                 {:program (concat body [instr] (rest instrs))
+                  :env env}))
+      :Loop (let [[_loop id-loop & body] (first instrs)]
+              {:program (concat (apply concat (repeat (get env id-loop 0) body)) (rest instrs))
                :env env}))))
-(use 'programs.parser)
 
 (defn interp [program env]
   (loop [step 0
@@ -47,6 +52,17 @@
           (>= step MAX-STEPS) :timeout
           :otherwise (recur (inc step) (interp-step program env)))))
 
+(defn print-program [c]
+  (doseq [l c] (println l)))
+
+
+(comment
+(use 'programs.parser)
+  
+(interp [[:While "x0" [:AssignConstant "x1" "1"] [:AssignConstant "x2" "2"]]
+              [:AssignConstant "x3" "3"]]
+             {"x0" 1}
+             )
 (analyse (parse-loop-program
            "x0 := x1 + 0;
            LOOP x2 DO
@@ -66,8 +82,46 @@
    }
   )
 
+(interp 
+  (parse-while-program
+    "x0 := x1 + 0;
+    LOOP x2 DO
+    x0 := x0 + 1
+    END"
+    )
+  {"x1" 5
+   "x2" 4
+   }
+  )
+
+(require 'instaparse.failure)
+(analyse (with-out-str (instaparse.failure/pprint-failure (parse-loop-program (slurp "resources/add.while")))))
+(interp
+(parse-while-program 
+  "x1 := x2 + 0;
+  WHILE x1 /= 0 DO x1 := x1 - 1; x42 := x42 + 1 END")
+{"x1" 5
+ "x2" 9 
+ "x42" 8 
+ }
+    
+  )
+
+(interp-step
+  (parse-loop-program
+    "LOOP x2 DO
+    x0 := x0 + 1
+    END"
+    )
+  {"x1" 5
+   "x2" 4
+   }
+  )
+
 (analyse (parse-loop-program
            "x0 := x2 + 0"
            )
          #{"x2"}
          )
+
+  )
