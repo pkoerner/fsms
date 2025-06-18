@@ -1,0 +1,69 @@
+(ns programs.loop)
+
+(def MAX-STEPS 10000)
+
+(defn analyse-instr [prog ids]
+  (case (first prog)
+    :AssignConstant (when (ids (second prog)) {:error true, :msg (str "Error: Assigning loop variable " (second prog))})
+    :AssignCalc     (cond (ids (second prog)) {:error true, :msg (str "Error: Assigning loop variable " (second prog))}
+                          (ids (nth prog 2)) {:error true, :msg (str "Error: Reading loop variable " (second prog))})
+    :Loop (if (ids (second prog))
+            {:error true, :msg (str "Error: Reading loop variable " (second prog))}
+            (let [ress (keep #(analyse-instr % (conj ids (second prog))) (drop 2 prog))]
+              (first ress)))))
+
+(defn analyse 
+  ([loop-program] (analyse loop-program #{}))
+  ([loop-program locked-ids] 
+   (first (keep #(analyse-instr % locked-ids) loop-program))))
+
+
+(defn interp-step [instrs env]
+  (if (empty? instrs)
+    {:program nil, :env env}
+    (case (ffirst instrs)
+      :AssignConstant (let [[_assignconst id const] (first instrs)]
+                        {:program (rest instrs)
+                         :env (assoc env id (parse-long const))})
+      :AssignCalc (let [[_assigncalc id-lhs id-rhs op const] (first instrs)
+                        arg1 (get env id-rhs 0)
+                        arg2 (parse-long const)
+                        res (max ((case op "+" + "-" -) arg1 arg2) 0)]
+                    {:program (rest instrs)
+                     :env (assoc env id-lhs res)})
+      :Loop (let [[_loop id-loop body] (first instrs)]
+              {:program (apply concat [(repeat (get env id-loop 0) body) (rest instrs)])
+               :env env}))))
+(use 'programs.parser)
+
+(defn interp [program env]
+  (loop [step 0
+         {:keys [program env]} {:program program :env env}]
+    (cond (not program) env
+          (>= step MAX-STEPS) :timeout
+          :otherwise (recur (inc step) (interp-step program env)))))
+
+(analyse (parse-loop-program
+           "x0 := x1 + 0;
+           LOOP x2 DO
+           x2 := x1 + 1
+           END"
+           ))
+
+(interp 
+  (parse-loop-program
+    "x0 := x1 + 0;
+    LOOP x2 DO
+    x0 := x0 + 1
+    END"
+    )
+  {"x1" 5
+   "x2" 4
+   }
+  )
+
+(analyse (parse-loop-program
+           "x0 := x2 + 0"
+           )
+         #{"x2"}
+         )
