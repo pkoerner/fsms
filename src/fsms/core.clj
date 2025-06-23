@@ -25,9 +25,31 @@
                (str "Word '" word "' should have been rejected, but was accepted"))]
     (concat err1 err2)))
 
+(defn to-bin [n]
+  (loop [acc () 
+         n n]
+    (if (zero? n)
+      (apply str acc)
+      (recur (conj acc (mod n 2)) (quot n 2)))))
+
+
+(defn maybe-binnify [input]
+  (cond (string? input) input
+        (integer? input) (to-bin input)
+        (sequential? input) (clojure.string/join "#" (mapv maybe-binnify input))
+        :otherwise (throw (IllegalArgumentException. (str "encountered weird input: " input)))))
+
+; (maybe-binnify 42)
+; (maybe-binnify "101010")
+; (maybe-binnify ["101010" "1010"]) 
+; (maybe-binnify [42 3]) 
+; (maybe-binnify [42]) 
+
 (defn validate-calculations [accept?-fn automaton config result-fn]
   (for [[input output] config
-        :let [res (result-fn (accept?-fn automaton input))]
+        :let [input (maybe-binnify input)
+              output (maybe-binnify output)
+              res (result-fn (accept?-fn automaton input))]
         :when (not= res output)]
     (str "Input " input " should yield '" output "' but was '" res "' instead.")))
 
