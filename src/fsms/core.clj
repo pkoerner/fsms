@@ -116,10 +116,10 @@
 (defn validate-program [program interp-fn config]
   (for [[input output] config
         :let [res (interp-fn program (build-initial-environment input))]
-        :when (not (and (map? res) (= output (get res "x0" 0))))]
+        :when (not (or (and (map? res) (= output (get res "x0" 0))) (= output res :timeout)))]
     (if (map? res)
       (str "Input " input " should yield '" output "' but was '" (get res "x0" 0) "' instead. Full environment: " (dissoc res :programs.goto/pc))  
-      (str "Error during execution with input: " input " - " res)))) 
+      (str "Error during execution with input: " input " - " res))))
 
 (defn validate-loop-program [file config]
   (let [program (prog-parser/parse-with file prog-parser/parse-loop-program)]
