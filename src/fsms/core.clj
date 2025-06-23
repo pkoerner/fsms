@@ -26,12 +26,13 @@
     (concat err1 err2)))
 
 (defn to-bin [n]
-  (loop [acc () 
-         n n]
-    (if (zero? n)
-      (apply str acc)
-      (recur (conj acc (mod n 2)) (quot n 2)))))
-
+  (if (zero? n)
+    "0"
+    (loop [acc () 
+           n n]
+      (if (zero? n)
+        (apply str acc)
+        (recur (conj acc (mod n 2)) (quot n 2))))))
 
 (defn maybe-binnify [input]
   (cond (string? input) input
