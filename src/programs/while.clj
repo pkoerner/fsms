@@ -47,10 +47,12 @@
 
 (defn interp [program env]
   (loop [step 0
+         seen #{}
          {:keys [program env]} {:program program :env env}]
     (cond (not program) env
           (>= step MAX-STEPS) :timeout
-          :otherwise (recur (inc step) (interp-step program env)))))
+          (seen [program env]) :timeout ;; we are even sure it is an infinite loop
+          :otherwise (recur (inc step) (conj seen [program env]) (interp-step program env)))))
 
 (defn print-program [c]
   (doseq [l c] (println l)))
