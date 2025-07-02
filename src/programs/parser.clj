@@ -70,6 +70,71 @@
 (defn parse-with [file f]
   (f (slurp file)))
 
+(def primrec-grammar
+  "Defs := Def*
+   <Def> := Primrec0 | PrimRecInd | Subst
+   Subst := Id <'('> Id Comma-Separated-ID-List <')'> WS <'='> WS Expr
+   Primrec0 := Id <'('> <'0'> Comma-Separated-ID-List <')'> WS <'='> WS Expr
+   PrimRecInd := Id <'('> IDPLUS1 Comma-Separated-ID-List <')'> WS <'='> WS Expr
+   Comma-Separated-ID-List := eps | WS <','> Id Comma-Separated-ID-List
+   Expr := Id <'('> Comma-Separated-Expr-List <')'> | SimpleExpr
+   <Comma-Separated-Expr-List> := Expr | Expr <','> Comma-Separated-Expr-List
+   SimpleExpr := Id | Number
+   IDPLUS1 := WS Id WS <'+'> WS <'1'> 
+   Id := WS #'[a-zA-Z]\\w*' WS
+   Number := WS #'[0-9]+' WS
+   <WS> := <#'\\s*'> 
+  "
+  )
+
+(def primrec-parser (insta/parser primrec-grammar))
+(defn parse-primrec [s]
+  (insta/transform {:Comma-Separated-ID-List (fn ([] [])
+                                                 ([a b] (vec (cons a b))))
+                    :Id identity
+                    :Number parse-long
+                    :SimpleExpr identity
+                    :Expr (fn [& args] (if (= 1 (count args)) (first args) (vec args)))
+                    :Subst (fn [fname id1 idmore expr] [:Subst fname `[~id1 ~@idmore] expr])
+                    }
+                   (primrec-parser s)))
+
+(def primrec-gödel-grammar
+  "<Fn> := Number | Succ | IdFn | Subst | PrimRec
+   FnList := Fn | Fn <','> FnList
+   Identifier := 'x' Pipes
+   IdFn := <'id'> Pipes <'*'> Pipes
+   Pipes := '|'+
+   <Succ> := 's'
+   Number := '0' | <Succ> <'('> Number <')'> 
+   Subst := <'SUB'> <'['> Fn <';'> FnList <']'> <'('> IdList <')'>
+   PrimRec := <'PR'> <'['> Fn <','> Fn <']'> <'('> IdList <')'>
+   IdList := Number | Identifier | Identifier <','> IdList"
+  
+  )
+
+(def primrec-gödel-parser (insta/parser primrec-gödel-grammar))
+
+(defn parse-primrec-gödel [s]
+  (first (insta/transform {:Identifier str
+                           :Pipes (comp count str)
+                           :IdList (fn ([] []) ([a] [a]) ([a b] (vec (cons a b))))
+                           :Number (fn [x] (if (= x "0") 0 (inc x)))
+                           :FnList (fn ([] []) ([a] [a]) ([a b] (vec (cons a b))))
+                           }
+                          (primrec-gödel-parser s))))
+
+(parse-primrec-gödel "PR[id|*|,SUB[s;id|||*||](x|,x||,x|||)](x|,x||)")
+[:PrimRec [:IdFn 1 1] [:Subst "s" [[:IdFn 3 2]] ["x1" "x2" "x3"]] ["x1" "x2"]]
+(parse-primrec-gödel "SUB[s;s](s(s(s(0))))")
+(parse-primrec-gödel "PR[s(0),SUB[PR[0,SUB[PR[id|*|,SUB[s;id|||*||](x|,x||,x|||)](x|,x||);id|||*||,id|||*|||](x|,x||,x|||)](x|,x||);id|||*||,id|||*|||](x|,x||,x|||)](x|,x||)")
+(parse-primrec "add(0,x) = id1_1(x)
+                add(n+1,x) = s(id3_2(n, add(n,x), x))
+                mult(0,x) = 0
+                mult(n+1,x) = f2(n, mult(n,x),x)
+                f2(a,b,c) = add(id3_2(a,b,c),id3_3(a,b,c))
+                f3(a,b,c) = 42")
+
 (comment 
 (parse-goto-program
   "M1 : x0 := x1 + 0;
@@ -111,4 +176,14 @@
   "x1 := x2 + 0;
   WHILE x1 /= 0 DO x1 := x1 - 1; x42 := 3 END")
 
+(primrec-parser "args(0) = 42
+                 manyargs(0, x,y,z,a,b) = 43
+                 add(0,x) = id1_1(x)
+                 add(n+1,x) = s(id3_2(n, add(n,x),x))")
+
+(parse-primrec  "args(0) = 42
+                 manyargs(0, x,y,z,a,b) = 43
+                 add(0,x) = id1_1(x)
+                 add(n+1,x) = s(id3_2(n, add(n,x),x))
+                 badd(x,y) = foo(s(id2_1(x,y)))")
 )
