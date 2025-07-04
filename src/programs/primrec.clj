@@ -242,3 +242,58 @@
 (ungödel [:PrimRec 1 [:IdFn 2 2] ["x1" "x2"]])
 (println (pretty-print-definitions (ungödel [:PrimRec [:IdFn 1 1] [:Subst "s" [[:IdFn 3 2]] ["x1" "x2" "x3"]] ["x1" "x2"]])))
 (println (pretty-print-definitions (ungödel [:PrimRec 1 [:Subst [:PrimRec 0 [:Subst [:PrimRec [:IdFn 1 1] [:Subst "s" [[:IdFn 3 2]] ["x1" "x2" "x3"]] ["x1" "x2"]] [[:IdFn 3 2] [:IdFn 3 3]] ["x1" "x2" "x3"]] ["x1" "x2"]] [[:IdFn 3 2] [:IdFn 3 3]] ["x1" "x2" "x3"]] ["x1" "x2"]])))
+
+(defn gödelify-number [n]
+  (str (apply str (repeat n "s("))
+       0
+       (apply str (repeat n ")"))))
+
+(defn gödelify-id [fname]
+  (let [[m k] (id-m_k->m-k fname)]
+    (str "id" (apply str (repeat m "|")) "*" (apply str (repeat k "|")))))
+
+(defn gödelify-arg [n]
+  (apply str "x" (repeat n "|")))
+
+
+(defn gödelify-aux [defs fname]
+  (let [cands (filter (fn [x] (= fname (get-fname x))) defs)]
+    (case (count cands)
+      0 ;; must be number or id or something
+      (cond (number? fname) (gödelify-number fname)
+            ;(= fname "s") "s"
+            (string/starts-with? fname "id") (gödelify-id fname)
+            :else (println :unhandled fname))
+      1 ;; must be substitution
+      (let [[_subst _fname argv [f & gs]] (first cands)]
+        (str "SUB[" (gödelify-aux defs f) ";" (string/join "," (map (partial gödelify-aux defs) (map first gs))) "]"
+             "(" (string/join "," (map gödelify-arg (range 1 (inc (count argv))))) ")"))
+      2 ;; must be primrec
+      (let [[[_primrec0 _fname0 args0 expr1] 
+             [_primrecind _fname1 [_idplus1 _recvar] _args1 expr2]]
+            (if (= (ffirst cands) :Primrec0) cands (reverse cands))
+            g (if (sequential? expr1) (first expr1) expr1)
+            h (if (sequential? expr2) (first expr2) expr2)
+            ]
+        (str "PR[" (gödelify-aux defs g) "," (gödelify-aux defs h) "]"
+             "(" (string/join "," (map gödelify-arg (range 1 (inc (inc (count args0)))))) ")")))))
+
+(defn gödelify [defs fname]
+  (gödelify-aux (rest defs) fname))
+
+
+(gödelify [:Defs [:Primrec0 "add" ["x"] ["id1_1" "x"]]
+                 [:PrimRecInd "add" [:IDPLUS1 "n"] ["x"] ["s" ["id3_2" "n" ["add" "n" "x"] "x"]]]
+                 [:Primrec0 "mult" ["x"] 0]
+                 [:PrimRecInd "mult" [:IDPLUS1 "n"] ["x"] ["f2" "n" ["mult" "n" "x"] "x"]]
+                 [:Subst "f2" ["a" "b" "c"] ["add" ["id3_2" "a" "b" "c"] ["id3_3" "a" "b" "c"]]]
+                 [:Primrec0 "exp" ["x"] 1]
+                 [:PrimRecInd "exp" [:IDPLUS1 "n"] ["x"] ["f3" "n" ["exp" "n" "x"] "x"]]
+                 [:Subst "f3" ["a" "b" "c"] ["mult" ["id3_2" "a" "b" "c"] ["id3_3" "a" "b" "c"]]]
+                 [:Primrec0 "fa" [] 1]
+                 [:PrimRecInd "fa" [:IDPLUS1 "n"] [] ["f4" "n" ["fa" "n"]]]
+                 [:Subst "f4" ["a" "b"] ["mult" ["id2_2" "a" "b"] ["s" ["id2_1" "a" "b"]]]]]
+          "fa"
+          )
+
+(println (pretty-print-definitions (ungödel [:PrimRec 1 [:Subst [:PrimRec 0 [:Subst [:PrimRec [:IdFn 1 1] "s" ["x1" "x2"]] [[:IdFn 3 2] [:IdFn 3 3]] ["x1" "x2" "x3"]] ["x1" "x2"]] [[:IdFn 2 2] "s"] ["x1" "x2"]] ["x1"]])))

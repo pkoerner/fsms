@@ -186,4 +186,30 @@
                  add(0,x) = id1_1(x)
                  add(n+1,x) = s(id3_2(n, add(n,x),x))
                  badd(x,y) = foo(s(id2_1(x,y)))")
+
+
+(parse-primrec "add(0,x) = id1_1(x)
+                add(n+1,x) = s(id3_2(n, add(n,x), x))
+                mult(0,x) = 0
+                mult(n+1,x) = f2(n, mult(n,x),x)
+                f2(a,b,c) = add(id3_2(a,b,c),id3_3(a,b,c))
+                exp(0,x) = 1
+                exp(n+1,x) = f3(n, exp(n,x),x)
+                f3(a,b,c) = mult(id3_2(a,b,c),id3_3(a,b,c))
+                fa(0) = 1
+                fa(n+1) = f4(n, fa(n))
+                f4(a,b) = mult(id2_2(a,b), s(id2_1(a,b)))") ;; TODO: is this really allowed?
+
+"fa(0) = 1
+ fa(x1+1) = f4(x1,f(x1))
+ f4(x1,x2) = f_6530(id2_2(x1,x2),s)
+ f_6530(0,x2) = 0
+ f_6530(x1+1,x2) = h_6534(x1,f_6530(x1,x2),x2)
+ h_6534(x1,x2,x3) = f_6535(id3_2(x1,x2,x3),id3_3(x1,x2,x3))
+ f_6535(0,x2) = id1_1(x1,x2)
+ f_6535(x1+1,x2) = s"
+
+(parse-primrec-gödel "PR[s(0),SUB[PR[0,SUB[PR[id|*|,s](x|,x||);id|||*||,id|||*|||](x|,x||,x|||)](x|,x||);id||*||,s](x|,x||)](x|)")
+
+
 )
